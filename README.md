@@ -2,7 +2,7 @@
 
 Curetrack is an automation tool that adds **medication reminders** (start date, end date, next cure, dose switch, expiration, low stock) to Google Calendar and keeps a complete **treatment history** in Notion - so patients never miss an event and history stays traceable.
 
-<img src="https://github.com/lisekarimi/curetracker/blob/main/assets/img/calendar_alert.png?raw=true" width="200"/>
+<img src="https://github.com/lisekarimi/curetrack/blob/main/assets/calendar_alert.png?raw=true" width="400"/>
 
 ## 🎥 Demo
 
