@@ -1,131 +1,75 @@
-# 🗓️ Curetrack - Automates medication tracking and reminders
+# 🗓️ CureTrack - Developer Setup
 
-Curetrack is an automation tool that adds **medication reminders** (start date, end date, next cure, dose switch, expiration, low stock) to Google Calendar and keeps a complete **treatment history** in Notion - so patients never miss an event and history stays traceable.
+Automated medication tracking and reminder tool built with n8n, Notion, and Google Calendar.
 
-<img src="https://github.com/lisekarimi/curetrack/blob/main/assets/calendar_alert.png?raw=true" width="400"/>
+🌐 **[View our website](https://curetrack.lisekarimi.com)**
 
-## 🎥 Demo
+## 🚀 Quick Start
 
-Check out the live Notion template: [Treatment Tracker Demo](https://www.notion.so/lisekarimi/Treatment-Tracker-26da61e34bdf80d6addde1fcf15f14a7)
+### Prerequisites
+* **Docker Desktop** + **WSL** (Windows) or Docker on Linux/Mac
+* **Notion** account + integration token
+* **Google Calendar** OAuth credentials
+* **PostgreSQL** database (local or cloud)
+* **n8n** (local or cloud hosting like Hostinger)
 
+### Setup Order
 
-## ✨ Features
+1. **Install n8n**:
+   - Local: `npm install n8n -g && n8n start`
+   - Cloud: Deploy to Hostinger or similar
+   - Access: [http://localhost:5678](http://localhost:5678)
 
-* Automates reminders for all medication events: **start date, end date, next cure date, expiration date, switch dose date, and low stock alert**.
-* Prevents duplicate alerts with Postgres.
-* Keeps treatment history organized in Notion.
-* Google Calendar integration ensures real-time reminders.
-* Daily scheduled runs keep everything up to date.
+2. **Create n8n Credentials**:
+   - Notion integration
+   - Google OAuth (Calendar API)
+   - PostgreSQL connection
 
-
-## 🔑 Prerequisites
-
-* **Docker Desktop** → [Download here](https://www.docker.com/products/docker-desktop/)
-* **WSL (Windows Subsystem for Linux)**
-* **Notion** → Create an integration at [Notion Integrations](https://www.notion.so/profile/integrations)
-  * Share database access: `Database → ••• → Connections → Add your integration`
-* **Google Calendar** → Create OAuth credentials in [Google Cloud Console](https://console.cloud.google.com/)
-  * Redirect URL: `http://localhost:5678/rest/oauth2-credential/callback`
-* **Postgres connection (inside n8n)**:
-  * Host: `curetrack-db`
-  * Database: `curetrack`
-  * User: `curetrack`
-  * Password: from `.env`
-* **n8n credentials setup** → add integrations for Notion, Google Calendar, and Postgres.
-* **Makefile** installed → used to run shortcuts like make up (start services) and make db (initialize database).
-* Basic understanding of JSON structure and arrays.
-
-## 📦 Tech Stack
-
-* **n8n** → workflow automation
-* **Notion** → supplements & treatment history databases
-* **Postgres** → alerts storage & deduplication
-* **Google Calendar** → reminders & events
-* **JavaScript (inside n8n)** → normalization & logic
-* **Docker + Docker Compose** → containerized deployment
-
-## 🔒 Database Backup & Security
-
-Curetrack provides built-in PostgreSQL backup and cleanup.
-
-* **`make backup`** → Creates a backup in `./backups/` **and** automatically deletes backups older than 15 days.
-* **`make cleanup`** → Runs cleanup only (without creating a new backup).
-
-You can automate them with Windows Task Scheduler (or any cron/scheduler you prefer) and choose your own runtime.
-
-For Windows Task Scheduler :
-
-**Backup:**
-```
-Program/script: C:\Windows\System32\wsl.exe
-Arguments: e bash -c "cd /mnt/d/workspace/pro/04_projects/portfolio/curetrack && make backup
-```
-
-**Cleanup:**
-```
-Program/script: C:\Windows\System32\wsl.exe
-Arguments: -e bash -c "cd /mnt/d/workspace/pro/04_projects/portfolio/curetrack && make cleanup"
-```
-
-## 🚀 Quickstart
-
-1. **Clone the Repository**:
+3. **Clone & Setup Project**:
    ```bash
    git clone https://github.com/lisekarimi/curetrack.git
    cd curetrack
+   cp .env.example .env  # Fill in your credentials
    ```
 
-2. **Set Up Environment**:
-   - Copy the `.env.example` to `.env` and fill in the required environment variables.
+4. **Start Services**:
+   ```bash
+   make up
+   ```
 
-3. **Start services**
+5. **Initialize Database**:
+   ```bash
+   make db
+   ```
 
-```bash
-make up
-```
+6. **Import Workflows**:
+   - Download JSON files from [workflows/](https://github.com/lisekarimi/curetrack/tree/main/workflows)
+   - Import into n8n: Create folder "CureTrack" → Import workflows
 
-* n8n → [http://localhost:5678](http://localhost:5678)
-* Postgres → port `5432`
+## 📂 Workflows
 
-3. **Initialize database schema**
+* **📧 Gmail Calendar Wipe** → deletes all calendar events
+* **📅 Calendar Alert Mailer** → sends medication events to Google Calendar
+* **📖 Sync Cure History** → synchronizes treatment cycles
+* **🔄 End Cycle Auto-Update** → auto-updates stock and resets cycles
 
-```bash
-make db
-```
-4. **Create the alerts table**
+## 🗄️ Database Schema
 
 ```sql
--- Create alerts table for Curetrack
 CREATE TABLE IF NOT EXISTS alerts (
   id                serial PRIMARY KEY,
-  notion_id         text NOT NULL,          -- ID from Notion
-  notion_name       text NOT NULL,          -- Supplement / medication name
-  alert_type        text NOT NULL,          -- e.g., start_date, end_date, expiration_date, low_stock, etc.
-  alert_value       text NOT NULL,          -- Description string or event date
-  calendar_event_id text NOT NULL,          -- Google Calendar event ID
+  notion_id         text NOT NULL,
+  notion_name       text NOT NULL,
+  alert_type        text NOT NULL,
+  alert_value       text NOT NULL,
+  calendar_event_id text NOT NULL,
   alert_sent_at     timestamptz DEFAULT now()
 );
 ```
 
-5. **Import workflows in n8n**
+## 🔧 Commands
 
-   * Log into [http://localhost:5678](http://localhost:5678)
-   * Create a free n8n account
-   * Add credentials (Google Calendar, Notion, Postgres)
-   * Create a new folder "CureTrack"
-   * Import JSON workflows from `workflows/`
-
-## 📂 Workflows
-
-Curetrack comes with three main **n8n workflows**:
-* **📧 Gmail Calendar Wipe** → deletes all events in your Google Calendar in one shot.
-* **📅 Calendar Alert Mailer** → sends all medication-related events (start, end, next cure, dose switch, expiration, low stock) into Google Calendar.
-* **📖 Sync Cure History** → synchronizes the Cure History database with the Complements database to track treatment cycles accurately.
-
-## 🗄️ Notion Databases
-
-Curetrack relies on **two Notion databases**:
-* **Complements** → the master list of all supplements/medications.
-* **Cure History** → tracks treatment cycles (start and end dates).
-
-  * Example: you can start a medication, pause, then restart later — all cycles are tracked here for history and traceability.
+- `make up` → Start services
+- `make db` → Initialize database
+- `make backup` → Backup database
+- `make cleanup` → Clean old backups
