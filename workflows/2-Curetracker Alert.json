@@ -1,0 +1,552 @@
+{
+  "name": "2-Curetracker Alert",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                2,
+                5
+              ],
+              "triggerAtHour": 16,
+              "triggerAtMinute": 35
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1200,
+        -2640
+      ],
+      "id": "77c43e69-64b3-4673-80c9-aceea387ffb6",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "<your-email>",
+          "mode": "list",
+          "cachedResultName": "<your-email>"
+        },
+        "start": "={{ $('Code in JavaScript').item.json.event_date }}",
+        "end": "={{ $('Code in JavaScript').item.json.event_date }}",
+        "additionalFields": {
+          "color": "6",
+          "description": "={{ $('Code in JavaScript').item.json.description }}",
+          "summary": "={{ $('Code in JavaScript').item.json.summary }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        192,
+        -2400
+      ],
+      "id": "a3d3b105-ec82-45c1-8cef-0e7326492f16",
+      "name": "Create an event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "<gcalendar-credential-id>",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "<complements-database-id>",
+          "mode": "id"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -976,
+        -2640
+      ],
+      "id": "d5c4abd3-b7df-49e8-823a-acf2a2dbec85",
+      "name": "Fetch Complements",
+      "credentials": {
+        "notionApi": {
+          "id": "<notion-credential-id>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3c29cf41-8a94-4a66-b40a-ac2107398c0e",
+              "leftValue": "={{ +$json.cnt }}\n",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -256,
+        -2400
+      ],
+      "id": "1ce35648-f725-4165-83e3-77811326cd4f",
+      "name": "Needs Alert?"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*)::int AS cnt\nFROM alerts\nWHERE replace(notion_id,'-','') = replace('{{$json.notion_id}}','-','')\n  AND alert_type = '{{$json.alert_type}}'\n  AND alert_value = '{{ $json.description }}'\n\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -528,
+        -2640
+      ],
+      "id": "4fdbb266-1950-42ff-a969-a98e1b78f5ba",
+      "name": "Check Alert Exists",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "credentials": {
+        "postgres": {
+          "id": "<postgres-credential-id>",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Get Data",
+        "height": 256,
+        "width": 192,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1024,
+        -2736
+      ],
+      "typeVersion": 1,
+      "id": "d18ed995-3382-4a97-bbf8-0380890b9591",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Check Alerts",
+        "height": 256
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -608,
+        -2736
+      ],
+      "typeVersion": 1,
+      "id": "92131e00-034e-439e-b514-f53c2ecf9d1c",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Create and Save Alert",
+        "height": 256,
+        "width": 928,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -304,
+        -2480
+      ],
+      "typeVersion": 1,
+      "id": "428ff70c-f7b6-466e-a424-17e46db71c09",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "jsCode": "const alerts = [];   // collect all alerts\n\nfor (const item of $input.all()) {\n  const row = item.json;  // shorthand for this row\n  \n  // --- Low stock ---\n  const stockRemainingRaw = row.property_stock_remaining;\n  const thresholdRaw = row.property_threshold;\n  \n  // Only process if both values exist and are not empty\n  if (((stockRemainingRaw != null && stockRemainingRaw !== '') || \n       (thresholdRaw != null && thresholdRaw !== '')) && \n       row.property_is_active === true) {\n    \n    const stockRemaining = Number(stockRemainingRaw);\n    const threshold = Number(thresholdRaw);\n    \n    if (!isNaN(stockRemaining) && !isNaN(threshold) && stockRemaining <= threshold) {\n      alerts.push({\n        json: {\n          notion_id: row.id,\n          notion_name: row.name,\n          alert_type: \"low_stock\",\n          event_date: new Date().toISOString(),\n          summary: `Low stock: ${row.name}`,\n          description: `true`\n        }\n      });\n    }\n  }\n  \n  // --- Next cure ---\n  if (row[\"property_next_cure_date\"]?.start) {\n    const cureDate = row[\"property_next_cure_date\"].start;\n    alerts.push({\n      json: {\n        notion_id: row.id,\n        notion_name: row.name,\n        alert_type: \"next_cure\",\n        event_date: cureDate,\n        summary: `Next cure: ${row.name}`,\n        description: `Next cure date: ${cureDate}`\n      }\n    });\n  }\n  \n  // --- Dose switch ---\n  if (row[\"property_dose_switch_date\"]?.start) {\n    const switchDate = row.property_dose_switch_date.start;\n    alerts.push({\n      json: {\n        notion_id: row.id,\n        notion_name: row.name,\n        alert_type: \"dose_switch\",\n        event_date: switchDate,\n        summary: `Dose switch: ${row.name}`,\n        description: `Switch date: ${switchDate}`\n      }\n    });\n  }\n  \n  // --- Start date ---\n  if (row.property_start_date?.start) {\n    const startDate = row.property_start_date.start;\n    alerts.push({\n      json: {\n        notion_id: row.id,\n        notion_name: row.name,\n        alert_type: \"start_date\",\n        event_date: startDate,\n        summary: `Start date: ${row.name}`,\n        description: `Treatment starts on ${startDate}`\n      }\n    });\n  }\n  \n  // --- End date ---\n  if (row.property_end_date?.start) {\n    const endDate = row.property_end_date.start;\n    alerts.push({\n      json: {\n        notion_id: row.id,\n        notion_name: row.name,\n        alert_type: \"end_date\",\n        event_date: endDate,\n        summary: `End date: ${row.name}`,\n        description: `Treatment ends on ${endDate}`\n      }\n    });\n  }\n\n  // --- Expiration date ---\n  if (row.property_expiration_date?.start) {\n    const expDate = row.property_expiration_date.start;\n    alerts.push({\n      json: {\n        notion_id: row.id,\n        notion_name: row.name,\n        alert_type: \"expiration_date\",\n        event_date: expDate,\n        summary: `Expiration date: ${row.name}`,\n        description: `Expiration date: ${expDate}`\n      }\n    });\n  }\n}\n\nreturn alerts;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -752,
+        -2640
+      ],
+      "id": "b3cd30f4-6e31-4fb5-8dfb-5514ea197bdb",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "content": "## Normalize",
+        "height": 256,
+        "width": 192,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -816,
+        -2736
+      ],
+      "typeVersion": 1,
+      "id": "a30984d1-078e-46b7-8c91-02a7fd018c5a",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "baed3885-d85e-49cc-8301-f0eb2a2ddc78",
+              "name": "notion_id",
+              "value": "={{ $('Code in JavaScript').item.json.notion_id }}",
+              "type": "string"
+            },
+            {
+              "id": "275a262d-72b4-45ff-bf74-ec22270b1e95",
+              "name": "notion_name",
+              "value": "={{ $('Code in JavaScript').item.json.notion_name }}",
+              "type": "string"
+            },
+            {
+              "id": "c8de89a0-4e5e-4445-8502-26eba3accffa",
+              "name": "alert_type",
+              "value": "={{ $('Code in JavaScript').item.json.alert_type }}",
+              "type": "string"
+            },
+            {
+              "id": "74e0d7d1-782f-4e80-b07b-ff21b80c6439",
+              "name": "alert_value",
+              "value": "={{ $('Code in JavaScript').item.json.description }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -32,
+        -2400
+      ],
+      "id": "39488f51-ba6a-49bb-85bf-35fb5a7ccd6f",
+      "name": "Set - Carry Fields"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "<your-email>",
+          "mode": "list",
+          "cachedResultName": "<your-email>"
+        },
+        "eventId": "={{ $json.calendar_event_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        176,
+        -2912
+      ],
+      "id": "ffe2820f-bbe0-4ef9-aee8-0c8712ec917f",
+      "name": "Delete an event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "<gcalendar-credential-id>",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id, alert_value, calendar_event_id\nFROM alerts\nWHERE replace(notion_id,'-','') = replace('{{ $('Code in JavaScript').item.json.notion_id }}','-','')\n  AND alert_type = '{{ $('Code in JavaScript').item.json.alert_type }}'\nORDER BY id DESC\nLIMIT 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -272,
+        -2912
+      ],
+      "id": "20c6e07c-d3ae-40f5-8790-7abbdd1c2735",
+      "name": "Get Latest Alert",
+      "credentials": {
+        "postgres": {
+          "id": "<postgres-credential-id>",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6d5f3443-0e51-4f5d-b3e4-5d7a5efbb5e1",
+              "leftValue": "={{ $json.alert_value }}",
+              "rightValue": "={{ $('Code in JavaScript').item.json.description }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -48,
+        -2912
+      ],
+      "id": "5116ea15-11e2-49fa-890e-1cbca8f531b0",
+      "name": "Alert Value Changed?"
+    },
+    {
+      "parameters": {
+        "operation": "deleteTable",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "alerts",
+          "mode": "list",
+          "cachedResultName": "alerts"
+        },
+        "deleteCommand": "delete",
+        "where": {
+          "values": [
+            {
+              "column": "calendar_event_id",
+              "value": "={{ $('Get Latest Alert').item.json.calendar_event_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        400,
+        -2912
+      ],
+      "id": "5c035f2f-e63b-4ed5-8a3f-7fbfc00f0ba9",
+      "name": "Delete rows",
+      "credentials": {
+        "postgres": {
+          "id": "<postgres-credential-id>",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO alerts (notion_id, notion_name, alert_type, alert_value, calendar_event_id)\nVALUES (\n  '{{ $('Set - Carry Fields').item.json.notion_id }}',\n  '{{ $('Set - Carry Fields').item.json.notion_name }}',\n  '{{ $('Set - Carry Fields').item.json.alert_type }}',\n  '{{ $('Set - Carry Fields').item.json.alert_value }}',\n  '{{$node[\"Create an event\"].json.id}}'\n)\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        416,
+        -2400
+      ],
+      "id": "ffe477bf-7a34-4149-afcb-163a737ce596",
+      "name": "Insert rows",
+      "credentials": {
+        "postgres": {
+          "id": "<postgres-credential-id>",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Update Existing Alert",
+        "height": 272,
+        "width": 928,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -304,
+        -2992
+      ],
+      "typeVersion": 1,
+      "id": "2bb0add2-292f-4c14-96de-d38f046aff62",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Complements",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event": {
+      "main": [
+        [
+          {
+            "node": "Insert rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Complements": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Alert?": {
+      "main": [
+        [
+          {
+            "node": "Set - Carry Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Alert Exists": {
+      "main": [
+        [
+          {
+            "node": "Get Latest Alert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Needs Alert?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Check Alert Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Carry Fields": {
+      "main": [
+        [
+          {
+            "node": "Create an event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete an event": {
+      "main": [
+        [
+          {
+            "node": "Delete rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Latest Alert": {
+      "main": [
+        [
+          {
+            "node": "Alert Value Changed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert Value Changed?": {
+      "main": [
+        [
+          {
+            "node": "Delete an event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "<error-workflow-id>",
+    "timezone": "Europe/Paris"
+  },
+  "versionId": "<version-id>",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "<n8n-instance-id>"
+  },
+  "id": "<workflow-id>",
+  "tags": []
+}

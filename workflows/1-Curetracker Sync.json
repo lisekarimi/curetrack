@@ -1,0 +1,445 @@
+{
+  "name": "1-Curetracker Sync",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "<complements-database-id>",
+          "mode": "list",
+          "cachedResultName": "Complements",
+          "cachedResultUrl": "https://www.notion.so/<complements-database-id>"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -2000,
+        -192
+      ],
+      "id": "6cb08f48-4005-4b1c-99d5-ab8cc95cbc29",
+      "name": "Fetch Complements",
+      "credentials": {
+        "notionApi": {
+          "id": "<notion-credential-id>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Get Data",
+        "height": 256,
+        "width": 390,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2032,
+        -288
+      ],
+      "typeVersion": 1,
+      "id": "0167d8d1-c432-4919-80dd-0bc75c846302",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "<cure-history-database-id>",
+          "mode": "list",
+          "cachedResultName": "Cure History",
+          "cachedResultUrl": "https://www.notion.so/<cure-history-database-id>"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -1776,
+        -192
+      ],
+      "id": "4d5aea14-0da9-43ea-9739-3877fd758566",
+      "name": "Fetch Cure History",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "notionApi": {
+          "id": "<notion-credential-id>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "<cure-history-database-id>",
+          "mode": "list",
+          "cachedResultName": "Cure History",
+          "cachedResultUrl": "https://www.notion.so/<cure-history-database-id>"
+        },
+        "title": "Cure History",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Complements|relation",
+              "relationValue": [
+                "={{ $json.complementId }}"
+              ]
+            },
+            {
+              "key": "Start Date|date",
+              "includeTime": false,
+              "date": "={{ $json.startDate }}"
+            },
+            {
+              "key": "End Date|date",
+              "includeTime": false,
+              "date": "={{ $json.endDate }}"
+            },
+            {
+              "key": "Name|title",
+              "title": "Cure History"
+            },
+            {
+              "key": "Created Date|date",
+              "includeTime": false,
+              "date": "={{ $now.toISODate() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -1104,
+        -32
+      ],
+      "id": "17a896e8-ec4f-4aa6-a2e0-5f7432fdfea5",
+      "name": "Create a database page",
+      "credentials": {
+        "notionApi": {
+          "id": "<notion-credential-id>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const complementsData = $('Fetch Complements').all().map(item => item.json);\nconst cureHistoryData = $('Fetch Cure History').all().map(item => item.json);\n\n// Group cure history by complement and get the one with the LATEST START DATE\nconst latestCureHistory = {};\ncureHistoryData.forEach(record => {\n  const complementIds = record.property_complements || [];\n  complementIds.forEach(complementId => {\n    if (!latestCureHistory[complementId] || \n        new Date(record.property_start_date?.start) > \n        new Date(latestCureHistory[complementId].property_start_date?.start)) {\n      latestCureHistory[complementId] = record;\n    }\n  });\n});\n\nconst recordsToCreate = [];\n\nfor (const complement of complementsData) {\n  if (complement.property_start_date?.start) {\n    const currentStartDate = complement.property_start_date.start;\n    const currentEndDate = complement.property_end_date?.start;\n    const currentStart = currentStartDate?.split('T')[0];\n    const currentEnd = currentEndDate?.split('T')[0];\n    \n    const latestHistory = latestCureHistory[complement.id];\n    \n    // CASE 1: No cure history exists - CREATE\n    if (!latestHistory) {\n      recordsToCreate.push({\n        complementId: complement.id,\n        complementName: complement.name,\n        startDate: currentStartDate,\n        endDate: currentEndDate\n      });\n    } else {\n      // CASE 2: Check if this is a NEW cure cycle (different start date)\n      const historyStart = latestHistory.property_start_date?.start?.split('T')[0];\n      \n      if (currentStart !== historyStart) {\n        // Different start date = new cure cycle = CREATE\n        recordsToCreate.push({\n          complementId: complement.id,\n          complementName: complement.name,\n          startDate: currentStartDate,\n          endDate: currentEndDate\n        });\n      }\n      // If start dates match, do nothing (UPDATE workflow handles this)\n    }\n  }\n}\n\nreturn recordsToCreate;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1552,
+        -32
+      ],
+      "id": "d0e5826b-b8c3-4522-b548-55bd003862bf",
+      "name": "Process All Data (Create)",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "notesInFlow": false,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const complementsData = $('Fetch Complements').all().map(item => item.json);\nconst cureHistoryData = $('Fetch Cure History').all().map(item => item.json);\n\n// Group cure history by complement and get the one with the LATEST START DATE\nconst latestCureHistory = {};\ncureHistoryData.forEach(record => {\n  const complementIds = record.property_complements || [];\n  complementIds.forEach(complementId => {\n    if (!latestCureHistory[complementId] || \n        new Date(record.property_start_date?.start) > \n        new Date(latestCureHistory[complementId].property_start_date?.start)) {\n      latestCureHistory[complementId] = record;\n    }\n  });\n});\n\nconst recordsToUpdate = [];\n\nfor (const complement of complementsData) {\n  if (complement.property_start_date?.start) {\n    const currentStartDate = complement.property_start_date.start;\n    const currentEndDate = complement.property_end_date?.start;\n    const currentStart = currentStartDate?.split('T')[0];\n    const currentEnd = currentEndDate?.split('T')[0];\n    \n    const latestHistory = latestCureHistory[complement.id];\n    \n    // Only process if history exists\n    if (latestHistory) {\n      const historyStart = latestHistory.property_start_date?.start?.split('T')[0];\n      const historyEnd = latestHistory.property_end_date?.start?.split('T')[0];\n      \n      // UPDATE if start dates match but end date changed\n      if (currentStart === historyStart && currentEnd !== historyEnd) {\n        recordsToUpdate.push({\n          recordId: latestHistory.id,\n          complementId: complement.id,\n          complementName: complement.name,\n          startDate: currentStartDate,\n          endDate: currentEndDate\n        });\n      }\n    }\n  }\n}\n\nreturn recordsToUpdate;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1552,
+        -336
+      ],
+      "id": "c3d4bcdc-2edd-40e9-a2eb-31dd6940e255",
+      "name": "Process All Data (Update)",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "notesInFlow": false,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.recordId }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Start Date|date",
+              "includeTime": false,
+              "date": "={{ $json.startDate }}"
+            },
+            {
+              "key": "End Date|date",
+              "includeTime": false,
+              "date": "={{ $json.endDate }}"
+            },
+            {
+              "key": "Created Date|date",
+              "includeTime": false,
+              "date": "={{ $now.toISODate() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -1104,
+        -336
+      ],
+      "id": "bb40019b-ea0d-4047-8fa1-6954eb616562",
+      "name": "Update a database page",
+      "credentials": {
+        "notionApi": {
+          "id": "<notion-credential-id>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1328,
+        -336
+      ],
+      "id": "f111f5d8-db99-4d9d-90ea-e11f3afd0198",
+      "name": "Loop Over Items To Update"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1328,
+        -32
+      ],
+      "id": "818be550-d5ee-4b88-889a-efce693ddeb6",
+      "name": "Loop Over Items To Create"
+    },
+    {
+      "parameters": {
+        "content": "## Procesing Logic",
+        "height": 736,
+        "width": 230
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1632,
+        -528
+      ],
+      "typeVersion": 1,
+      "id": "c679a1dd-b81d-4cd1-afa4-6854b0bd23ff",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Execution & Output",
+        "height": 736,
+        "width": 454,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1392,
+        -528
+      ],
+      "typeVersion": 1,
+      "id": "79739fd4-f4de-46a1-95e7-ef1b2658e95d",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                2,
+                5
+              ],
+              "triggerAtHour": 16,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2224,
+        -192
+      ],
+      "id": "cf5cfad4-e630-4dc0-a8b5-0927ef74532d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "content": "### For CREATE workflow:\nCREATE: New record in \"Cure History\" table when \"Complements\" table has a different start date than the most recent Cure History record\n(Most recent = latest start date in Cure History, not creation date)\n\n### For UPDATE workflow:\nUPDATE: Existing record in \"Cure History\" table when start date matches the most recent record but end date changed in \"Complements\" table\n(Most recent = latest start date in Cure History, not creation date)",
+        "height": 256,
+        "width": 464
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2400,
+        -624
+      ],
+      "id": "6f2678b2-b847-489c-abe1-f50e435c37df",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2025-09-13T06:09:37.764-04:00",
+          "Readable date": "September 13th 2025, 6:09:37 am",
+          "Readable time": "6:09:37 am",
+          "Day of week": "Saturday",
+          "Year": "2025",
+          "Month": "September",
+          "Day of month": "13",
+          "Hour": "06",
+          "Minute": "09",
+          "Second": "37",
+          "Timezone": "America/New_York (UTC-04:00)"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Fetch Complements": {
+      "main": [
+        [
+          {
+            "node": "Fetch Cure History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Cure History": {
+      "main": [
+        [
+          {
+            "node": "Process All Data (Create)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Process All Data (Update)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process All Data (Create)": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items To Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process All Data (Update)": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items To Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items To Update": {
+      "main": [
+        [
+          {
+            "node": "Update a database page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items To Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items To Create": {
+      "main": [
+        [
+          {
+            "node": "Create a database page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items To Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Complements",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "<error-workflow-id>",
+    "timezone": "Europe/Paris"
+  },
+  "versionId": "<version-id>",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "<n8n-instance-id>"
+  },
+  "id": "<workflow-id>",
+  "tags": []
+}

@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://curetrack.lisekarimi.com/sitemap.xml
+
+# Disallow access to specific files/directories if any
+# Disallow: /private/
+# Disallow: /admin/
+
+# Allow all search engines to crawl the site
+Allow: /assets/
+Allow: /learn-more

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CureTrack - Automated Medication Tracking & Reminders</title>
+    <meta name="description" content="CureTrack: Automated medication tracking & reminders. Never miss a dose with smart alerts, Google Calendar integration, and complete treatment history in Notion. Open source n8n workflows for medication management.">
+    <meta name="keywords" content="medication tracking, medication reminders, automated healthcare, Google Calendar integration, Notion database, n8n workflows, medication management, treatment history, health automation">
+    <meta name="author" content="CureTrack">
+    <meta property="og:title" content="CureTrack - Automated Medication Tracking & Reminders">
+    <meta property="og:description" content="Never miss a medication again. CureTrack automates medication reminders and keeps complete treatment history in your calendar and Notion.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://curetrack.lisekarimi.com">
+    <meta property="og:image" content="https://curetrack.lisekarimi.com/assets/og-img.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="CureTrack - Automated Medication Tracking & Reminders">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CureTrack - Automated Medication Tracking & Reminders">
+    <meta name="twitter:description" content="Never miss a medication again. CureTrack automates medication reminders and keeps complete treatment history in your calendar and Notion.">
+    <meta name="twitter:image" content="https://curetrack.lisekarimi.com/assets/og-img.png">
+    <link rel="icon" href="assets/favicon.ico">
+    <link rel="stylesheet" href="assets/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "CureTrack",
+        "description": "Automated medication tracking and reminders with Google Calendar integration and Notion database management",
+        "url": "https://curetrack.lisekarimi.com",
+        "applicationCategory": "HealthApplication",
+        "operatingSystem": "Web",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "creator": {
+            "@type": "Person",
+            "name": "Lise Karimi"
+        },
+        "featureList": [
+            "Automated medication reminders",
+            "Google Calendar integration",
+            "Notion database management",
+            "Treatment history tracking",
+            "Smart alerts for schedules and changes",
+            "Low stock warnings",
+            "Expiration date monitoring"
+        ]
+    }
+    </script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">
+                <i class="fas fa-pills"></i>
+                <span>CureTrack</span>
+            </a>
+            <div class="nav-menu">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#how-it-works" class="nav-link">How It Works</a>
+                <a href="learn-more.html" class="nav-link">Learn More</a>
+                <a href="https://github.com/lisekarimi/curetrack" class="nav-link" target="_blank">GitHub</a>
+            </div>
+            <div class="nav-toggle">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <main class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    Never Miss a Medication Again
+                    <span class="highlight">Automated Tracking & Reminders</span>
+                </h1>
+                <p class="hero-description">
+                    CureTrack automates med reminders and logs your full treatment history with alerts for schedules, changes, expirations, and low stock, all synced to Google Calendar and Notion.
+
+                </p>
+                <div class="hero-buttons">
+                    <a href="learn-more.html" class="btn btn-primary">
+                        <i class="fas fa-rocket"></i>
+                        Get Started
+                    </a>
+                    <a href="https://github.com/lisekarimi/curetrack" class="btn btn-secondary" target="_blank">
+                        <i class="fab fa-github"></i>
+                        View Code
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number">100%</span>
+                        <span class="stat-label">Automated</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">24/7</span>
+                        <span class="stat-label">Monitoring</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">0</span>
+                        <span class="stat-label">Missed Doses</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="calendar-mockup" role="img" aria-label="Google Calendar showing medication reminders and alerts">
+                    <div class="calendar-header">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Google Calendar</span>
+                    </div>
+                    <div class="calendar-events">
+                        <div class="event event-start">
+                            <i class="fas fa-play-circle"></i>
+                            <span>Start Vitamin D - Today</span>
+                        </div>
+                        <div class="event event-end">
+                            <i class="fas fa-stop-circle"></i>
+                            <span>End Antibiotics - Tomorrow</span>
+                        </div>
+                        <div class="event event-switch">
+                            <i class="fas fa-exchange-alt"></i>
+                            <span>Switch Ibuprofen Dose - Next Week</span>
+                        </div>
+                        <div class="event event-low">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Low Stock Alert - Iron</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Why Choose CureTrack?</h2>
+                <p>Automated medication tracking that integrates with your calendar and keeps complete treatment history.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h3>Smart Reminders</h3>
+                    <p>Get alerts for start dates, end dates, dose switches, expiration dates, next cure dates, and low stock warnings - all automatically synced to your Google Calendar.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <h3>Complete History</h3>
+                    <p>Track every treatment cycle with detailed history in Notion. Start, pause, restart - every medication journey is recorded and traceable.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>No Duplicates</h3>
+                    <p>PostgreSQL prevents duplicate alerts, ensuring you only get the reminders you need, when you need them.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-sync"></i>
+                    </div>
+                    <h3>Auto-Updates</h3>
+                    <p>Automatically saves remaining stock and resets cycles when treatments end. Your data stays current without manual intervention.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <h3>Calendar Integration</h3>
+                    <p>Seamless Google Calendar integration ensures you never miss critical medication events with real-time reminders.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h3>Organized Data</h3>
+                    <p>Keep supplements and treatment history organized in Notion databases with calculated fields for days elapsed and stock remaining.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2>How It Works</h2>
+                <p>Simple setup, powerful automation</p>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Connect Your Tools</h3>
+                        <p>Set up integrations with Google Calendar, Notion, and PostgreSQL through n8n workflows.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Import Your Data</h3>
+                        <p>Add your supplements and medications to the Notion database with start dates, dosages, and treatment cycles.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Automate Everything</h3>
+                        <p>Let CureTrack handle the rest - daily runs check dates, create reminders, and keep your treatment history updated.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="demo">
+        <div class="container">
+            <div class="demo-content">
+                <div class="demo-text">
+                    <h2>See CureTrack in Action</h2>
+                    <p>Explore our live Notion template and see how CureTrack creates automated calendar alerts for your medication schedule.</p>
+                    <a href="https://www.notion.so/lisekarimi/Treatment-Tracker-26da61e34bdf80d6addde1fcf15f14a7" class="btn btn-primary" target="_blank">
+                        <i class="fab fa-notion"></i>
+                        View Notion Template
+                    </a>
+                </div>
+                <div class="demo-image">
+                    <a href="https://github.com/lisekarimi/curetrack/blob/main/assets/notion.png" target="_blank" class="screenshot-link">
+                        <div class="calendar-screenshot">
+                            <div class="screenshot-header">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Notion Integration</span>
+                            </div>
+                            <div class="screenshot-content">
+                                <img src="https://github.com/lisekarimi/curetrack/blob/main/assets/notion.png?raw=true" alt="CureTrack Notion integration showing medication tracking interface" class="calendar-image">
+                                <div class="screenshot-overlay">
+                                    <div class="alert-badge">
+                                        <i class="fab fa-github"></i>
+                                        <span>View on GitHub</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- n8n Workflow Section -->
+    <section id="workflow" class="workflow-demo">
+        <div class="container">
+            <div class="workflow-content">
+                <div class="workflow-text">
+                    <h2>Powerful n8n Automation</h2>
+                    <p>See the n8n Workflows that powers CureTrack's automation. These workflows handle data processing, calendar integration, and smart alerts.</p>
+                    <a href="https://github.com/lisekarimi/curetrack/tree/main/workflows" class="btn btn-primary" target="_blank">
+                        <i class="fab fa-github"></i>
+                        View Workflows
+                    </a>
+                </div>
+                <div class="workflow-image">
+                    <a href="https://github.com/lisekarimi/curetrack/blob/main/assets/calendar_alert.png" target="_blank" class="workflow-screenshot-link">
+                        <div class="workflow-screenshot">
+                            <div class="workflow-header">
+                                <i class="fas fa-cogs"></i>
+                                <span>n8n Workflow</span>
+                            </div>
+                            <div class="workflow-content-image">
+                                <img src="https://github.com/lisekarimi/curetrack/blob/main/assets/calendar_alert.png?raw=true" alt="CureTrack n8n workflow showing automated medication tracking process" class="workflow-img">
+                                <div class="workflow-overlay">
+                                    <div class="workflow-badge">
+                                        <i class="fas fa-play"></i>
+                                        <span>View Workflow</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Ready to Never Miss a Medication Again?</h2>
+                <p>Start automating your medication tracking with CureTrack.</p>
+                <div class="cta-buttons">
+                    <a href="https://github.com/lisekarimi/curetrack" class="btn btn-primary" target="_blank">
+                        <i class="fab fa-github"></i>
+                        Get Started on GitHub
+                    </a>
+                    <a href="learn-more.html" class="btn btn-outline">
+                        <i class="fas fa-info-circle"></i>
+                        Learn More
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Explore More Projects Section -->
+    <section class="explore-projects">
+        <div class="container">
+            <div class="projects-content">
+                <div class="project-card">
+                    <h3>Explore More Projects</h3>
+                    <a href="https://lisekarimi.com" class="btn btn-primary" target="_blank">
+                        <i class="fas fa-external-link-alt"></i>
+                        Visit My Portfolio
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <a href="index.html" class="footer-logo">
+                    <i class="fas fa-pills"></i>
+                    <span>CureTrack</span>
+                </a>
+                <div class="footer-links">
+                    <a href="https://lisekarimi.com" target="_blank">Portfolio</a>
+                    <a href="https://github.com/lisekarimi/curetrack" target="_blank">GitHub</a>
+                    <a href="https://linkedin.com/in/lisekarimi" target="_blank">LinkedIn</a>
+                    <a href="mailto:contact@curetrack.dev">Email</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 CureTrack. Open source medication tracking automation.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/main.js"></script>
+    <script src="assets/chatbot.js"></script>
+</body>
+</html>

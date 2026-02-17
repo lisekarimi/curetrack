@@ -1,0 +1,283 @@
+{
+  "name": "3-End Cycle Auto Update",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                2,
+                5
+              ],
+              "triggerAtHour": 16,
+              "triggerAtMinute": 40
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -512,
+        -320
+      ],
+      "id": "0ea8f587-2d52-46bb-b30f-9dcaf257ab31",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Start Date|date",
+              "includeTime": false,
+              "date": "={{ $json.updates.property_start_date }}"
+            },
+            {
+              "key": "Initial Stock (tabs)|number",
+              "numberValue": "={{ $json.updates.property_initial_stock_tabs }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        384,
+        -320
+      ],
+      "id": "259e0b0d-7ac3-4f2f-a70d-0a783d2858c2",
+      "name": "Update Notion",
+      "credentials": {
+        "notionApi": {
+          "id": "<notion-credential-id>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "<telegram-chat-id>",
+        "text": "=CureTracker - Fields Update\nDate: {{ $now.format('yyyy-MM-dd') }}\n\nTotal Supplements Updated: {{ $('Process All Data (Update)').all().length }}\n\nDon't forget to check duration and next interval if needed!\n\nUpdated Supplements:\n\n{{ $('Process All Data (Update)').all().map(item => `${item.json.complement}\n   Stock Saved: ${item.json.stock_saved || 'N/A'}\n   New Start Date: ${item.json.new_start_date || 'Cleared'}`).join('\\n\\n') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        608,
+        -320
+      ],
+      "id": "29780cbb-7624-4b86-8bcb-d15f580ea455",
+      "name": "Telegram",
+      "webhookId": "<webhook-id>",
+      "executeOnce": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "<telegram-credential-id>",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "<complements-database-id>",
+          "mode": "list",
+          "cachedResultName": "Complements",
+          "cachedResultUrl": "https://www.notion.so/<complements-database-id>"
+        },
+        "returnAll": true,
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "End Date|formula",
+              "condition": "on_or_before",
+              "returnType": "date",
+              "dateValue": "={{ $now.format('yyyy-MM-dd') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -288,
+        -320
+      ],
+      "id": "706267c5-4986-4f4c-b7fd-1b4fbbb8da48",
+      "name": "Fetch Complements",
+      "credentials": {
+        "notionApi": {
+          "id": "<notion-credential-id>",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all items from the previous node\nconst items = $input.all();\n\n// If no items found, return empty array and end workflow\nif (items.length === 0) {\n  return [];\n}\n\n// Process each item and prepare updates\nreturn items.map(item => {\n  const data = item.json;\n  \n  // Initialize with valid defaults: 0 for number, null for date\n  const updates = {\n    property_initial_stock_tabs: null,\n    property_start_date: \"\"\n  };\n  \n  // Variable to track the new start date for Telegram\n  let newStartDate = \"\";\n  let stockSaved = \"\";\n  \n  // --- STOCK MANAGEMENT ---\n  // Update initial stock with current stock remaining value\n  // Only if stock_remaining field has a value (not null/undefined/empty)\n  if (data.property_stock_remaining !== null && \n      data.property_stock_remaining !== undefined && \n      data.property_stock_remaining !== \"\") {\n    // If stock is negative, set to 0, otherwise use the actual value\n    const stockValue = data.property_stock_remaining < 0 ? 0 : data.property_stock_remaining;\n    updates.property_initial_stock_tabs = stockValue;\n    stockSaved = stockValue;\n  }\n  \n  // --- CYCLE MANAGEMENT ---\n  // Check if there's a next cure date scheduled\n  if (data.property_next_cure_date?.start) {\n    // Start a new cycle: set start date to the next cure date (just the date string)\n    newStartDate = data.property_next_cure_date.start.split('T')[0];\n    updates.property_start_date = newStartDate;\n  }\n  \n  // Return formatted data for next node\n  return {\n    json: {\n      id: data.id,\n      complement: data.property_complement,\n      stock_saved: stockSaved,\n      new_start_date: newStartDate,\n      updates: updates\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        -320
+      ],
+      "id": "92d8fa5e-ac28-4dbd-96f6-208224a16102",
+      "name": "Process All Data (Update)"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        160,
+        -320
+      ],
+      "id": "ddcc9536-4ab2-4d2b-9460-88c6fed9abb1",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "content": "## Get Data",
+        "height": 256,
+        "width": 214,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -352,
+        -416
+      ],
+      "typeVersion": 1,
+      "id": "2e78da8e-c050-4733-9370-1e377006509b",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Procesing Logic",
+        "height": 272,
+        "width": 182
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -112,
+        -432
+      ],
+      "typeVersion": 1,
+      "id": "60e0286f-4a7c-4369-8386-645e2d96f11a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Execution & Output\n\nUpdate:\n- Initial Stock (tabs) - Set to the stock remaining value from the previous cycle (or 0 if negative)\n- Start Date - Set to the next cure date (if it exists), otherwise cleared",
+        "height": 384,
+        "width": 662,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        112,
+        -544
+      ],
+      "typeVersion": 1,
+      "id": "9e6b942a-68a7-4f12-a308-9efac435c68d",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Complements",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Notion": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Complements": {
+      "main": [
+        [
+          {
+            "node": "Process All Data (Update)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process All Data (Update)": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Update Notion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "<error-workflow-id>"
+  },
+  "versionId": "<version-id>",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "<n8n-instance-id>"
+  },
+  "id": "<workflow-id>",
+  "tags": []
+}
